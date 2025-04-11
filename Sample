@@ -1,0 +1,138 @@
+Task Overview: Set up a multi-container application using Podman Compose
+
+Create a podman-compose.yml file that:
+
+Defines a web server (like Nginx).
+
+Defines a backend service (like Node.js).
+
+Ensure both services can communicate.
+
+Add volume definitions to persist backend data.
+
+Start the application using podman-compose up.
+
+Confirm both containers are running and interacting.
+
+Submission Requirements:
+
+Prepare a Word document:
+
+Include screenshots of every step.
+
+Write explanations for each screenshot.
+
+Do not include any secrets or credentials in GitHub.
+
+Push all:
+
+Scripts
+
+Documentation
+
+Dockerfiles
+
+To GitHub before the deadline.
+
+Prefer full-screen screenshots.
+
+Would you like a sample podman-compose.yml file to get started or help creating the Word documentation structure?
+
+
+
+
+
+
+You said:
+Yes
+
+
+ChatGPT said:
+Great! Here's a sample podman-compose.yml file and a basic structure for your Word documentation to help you get started.
+
+Sample podman-compose.yml
+This example sets up:
+
+Nginx as a frontend web server
+
+Node.js (Express) as a backend service
+
+A volume for persisting backend data
+
+yaml
+Copy code
+version: "3"
+services:
+  backend:
+    image: node:18
+    container_name: backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+    command: sh -c "npm install && node server.js"
+    ports:
+      - "3000:3000"
+
+  frontend:
+    image: nginx:alpine
+    container_name: frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+
+volumes:
+  backend_data:
+Word Document Structure (for Submission)
+Title: Setting Up Multi-Container App Using Podman Compose
+
+1. Introduction
+
+Objective of the task
+
+Tools used (Podman, Node.js, Nginx)
+
+2. Directory Structure
+
+Show folder layout using screenshot
+
+Explain what each folder/file does
+
+3. podman-compose.yml Explanation
+
+Paste the code
+
+Briefly explain each section (services, volumes, ports, etc.)
+
+4. Backend Setup
+
+Screenshot of backend code (e.g., server.js)
+
+Screenshot of terminal when starting backend service
+
+5. Nginx Setup
+
+Screenshot of custom nginx.conf file (optional)
+
+Screenshot of Nginx container running
+
+6. Running with Podman Compose
+
+Screenshot of podman-compose up
+
+Screenshot of both services running and communicating (e.g., curl or browser output)
+
+7. Volume Demonstration
+
+Screenshot showing persistent data (e.g., a file written by backend)
+
+8. Conclusion
+
+Summary of what you achieved
+
+Any issues faced and how you solved them
+
+Want help writing the backend code (server.js) or the nginx.conf file too?
