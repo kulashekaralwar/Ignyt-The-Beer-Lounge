@@ -25,43 +25,87 @@ import yaml
 import psutil
 import requests
 from bs4 import BeautifulSoup
+import logging
+from datetime import datetime
 
-# Load JSON config
-with open('config.json') as f:
-    json_config = json.load(f)
+# Setup logging
+logging.basicConfig(
+    filename='status_report.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-# Load YAML config
-with open('config.yaml') as f:
-    yaml_config = yaml.safe_load(f)
+def load_json_config(filepath):
+    try:
+        with open(filepath) as f:
+            config = json.load(f)
+        logging.info(f"Loaded JSON config from {filepath}")
+        return config
+    except Exception as e:
+        logging.error(f"Error loading JSON config: {e}")
+        return {}
 
-# Get system specifications
-system_specs = {
-    "cpu_percent": psutil.cpu_percent(interval=1),
-    "memory_percent": psutil.virtual_memory().percent,
-    "disk_percent": psutil.disk_usage('/').percent
-}
+def load_yaml_config(filepath):
+    try:
+        with open(filepath) as f:
+            config = yaml.safe_load(f)
+        logging.info(f"Loaded YAML config from {filepath}")
+        return config
+    except Exception as e:
+        logging.error(f"Error loading YAML config: {e}")
+        return {}
 
-# Scrape website
-url = "https://www.python.org/"
-response = requests.get(url)
-soup = BeautifulSoup(response.content, "html.parser")
+def get_system_specs():
+    try:
+        specs = {
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_percent": psutil.disk_usage('/').percent
+        }
+        logging.info("Collected system specifications")
+        return specs
+    except Exception as e:
+        logging.error(f"Error collecting system specs: {e}")
+        return {}
 
-web_data = {
-    "http_status": response.status_code,
-    "page_title": soup.title.string.strip() if soup.title else "N/A",
-    "headings": [h.get_text(strip=True) for h in soup.find_all(['h1', 'h2', 'h3'])]
-}
+def scrape_website(url):
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        data = {
+            "http_status": response.status_code,
+            "page_title": soup.title.string.strip() if soup.title else "N/A",
+            "headings": [tag.get_text(strip=True) for tag in soup.find_all(['h1', 'h2', 'h3'])]
+        }
+        logging.info(f"Scraped website: {url}")
+        return data
+    except Exception as e:
+        logging.error(f"Error scraping website {url}: {e}")
+        return {}
 
-# Generate report
-report = {
-    "deployment_config": json_config,
-    "service_config": yaml_config,
-    "system_specifications": system_specs,
-    "website_data": web_data
-}
+def generate_status_report(json_path, yaml_path, website_url, output_file):
+    report = {
+        "timestamp": datetime.now().isoformat(),
+        "deployment_config": load_json_config(json_path),
+        "service_config": load_yaml_config(yaml_path),
+        "system_specifications": get_system_specs(),
+        "website_data": scrape_website(website_url)
+    }
 
-# Save report to JSON file
-with open("status_report.json", "w") as f:
-    json.dump(report, f, indent=4)
+    try:
+        with open(output_file, 'w') as f:
+            json.dump(report, f, indent=4)
+        logging.info(f"Status report saved to {output_file}")
+        print(f"Report generated: {output_file}")
+    except Exception as e:
+        logging.error(f"Error writing report to {output_file}: {e}")
 
-print("Status report generated: status_report.json")
+# ---- Main ----
+if __name__ == "__main__":
+    generate_status_report(
+        json_path="config.json",
+        yaml_path="config.yaml",
+        website_url="https://www.python.org/",
+        output_file="status_report.json"
+    )
+
