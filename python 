@@ -12,3 +12,56 @@ def pascal_triangle(n):
 # Input from user
 N = int(input("Enter number of rows: "))
 pascal_triangle(N)
+
+
+
+
+
+
+
+
+import json
+import yaml
+import psutil
+import requests
+from bs4 import BeautifulSoup
+
+# Load JSON config
+with open('config.json') as f:
+    json_config = json.load(f)
+
+# Load YAML config
+with open('config.yaml') as f:
+    yaml_config = yaml.safe_load(f)
+
+# Get system specifications
+system_specs = {
+    "cpu_percent": psutil.cpu_percent(interval=1),
+    "memory_percent": psutil.virtual_memory().percent,
+    "disk_percent": psutil.disk_usage('/').percent
+}
+
+# Scrape website
+url = "https://www.python.org/"
+response = requests.get(url)
+soup = BeautifulSoup(response.content, "html.parser")
+
+web_data = {
+    "http_status": response.status_code,
+    "page_title": soup.title.string.strip() if soup.title else "N/A",
+    "headings": [h.get_text(strip=True) for h in soup.find_all(['h1', 'h2', 'h3'])]
+}
+
+# Generate report
+report = {
+    "deployment_config": json_config,
+    "service_config": yaml_config,
+    "system_specifications": system_specs,
+    "website_data": web_data
+}
+
+# Save report to JSON file
+with open("status_report.json", "w") as f:
+    json.dump(report, f, indent=4)
+
+print("Status report generated: status_report.json")
