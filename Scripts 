@@ -1,0 +1,468 @@
+Great! Based on the image you shared, here's a breakdown and example shell scripts for both tasks:
+
+---
+
+## **i. System Info & Configuration Script**
+```bash
+#!/bin/bash
+
+echo "----- System Information -----"
+echo "OS Version: $(lsb_release -d | cut -f2)"
+echo "Kernel Version: $(uname -r)"
+echo "Uptime: $(uptime -p)"
+echo "Memory & Swap Info:"
+free -h
+
+echo "CPU Cores: $(nproc)"
+echo "----- Cache Memory -----"
+grep -i "Cached" /proc/meminfo
+
+echo "----- Updating ulimit -----"
+ulimit -n 1028
+echo "New ulimit: $(ulimit -n)"
+
+echo "----- Setting Timezone to Brussels -----"
+sudo timedatectl set-timezone Europe/Brussels
+echo "Current Timezone: $(timedatectl | grep 'Time zone')"
+```
+
+---
+
+## **ii. Password Strength Checker Script**
+```bash
+#!/bin/bash
+
+read -s -p "Enter your password: " password
+echo
+
+if [[ ${#password} -lt 10 ]]; then
+  echo "Weak Password: Less than 10 characters"
+elif ! [[ "$password" =~ [A-Z] ]]; then
+  echo "Weak Password: No uppercase letter"
+elif ! [[ "$password" =~ [a-z] ]]; then
+  echo "Weak Password: No lowercase letter"
+elif ! [[ "$password" =~ [0-9] ]]; then
+  echo "Weak Password: No number"
+elif ! [[ "$password" =~ [a-zA-Z] ]]; then
+  echo "Weak Password: No alphabets"
+else
+  echo "Strong Password"
+fi
+```
+
+---
+
+Let me know if you want to combine both into one script or want an explanation of any part!
+
+
+Thanks for sharing! Based on your image, here's a sample shell script using `jq` (a lightweight command-line JSON processor) to handle the JSON data:
+
+---
+
+### **Sample JSON (`data.json`)**
+```json
+{
+  "users": [
+    {
+      "name": "John Doe",
+      "age": 30,
+      "status": "inactive"
+    },
+    {
+      "name": "Jane Smith",
+      "age": 35,
+      "status": "active"
+    },
+    {
+      "name": "Bob Johnson",
+      "age": 40,
+      "status": "active"
+    }
+  ]
+}
+```
+
+---
+
+### **Shell Script (`process_json.sh`)**
+```bash
+#!/bin/bash
+
+# 1. Extract all names and display
+echo "User Names:"
+jq -r '.users[].name' data.json
+
+# 2. Filter users with age > 30 and save to a new file
+jq '{users: [.users[] | select(.age > 30)]}' data.json > filtered.json
+echo -e "\nFiltered users with age > 30 saved to 'filtered.json'"
+
+# 3. Calculate average age of all users
+total_age=$(jq '[.users[].age] | add' data.json)
+count=$(jq '.users | length' data.json)
+average=$(echo "$total_age / $count" | bc -l)
+printf "\nAverage Age: %.2f\n" "$average"
+```
+
+---
+
+### **Note:**
+Make sure `jq` is installed:
+```bash
+sudo apt install jq
+```
+
+Let me know if you also want the file structure/Nginx part mentioned in the heading.
+
+To recreate the file structure shown in the image using a shell script, here’s the script:
+
+```bash
+#!/bin/bash
+
+# Create base directory
+mkdir -p q4/dir1/dir2/dir3/dir4
+
+# Create files in dir4
+touch q4/dir1/dir2/dir3/dir4/file4.py
+touch q4/dir1/dir2/dir3/dir4/file5.tf
+
+# Create files in dir3
+touch q4/dir1/dir2/dir3/file2.ts
+touch q4/dir1/dir2/dir3/file2.txt
+
+# Create files in dir2
+touch q4/dir1/dir2/file1.js
+touch q4/dir1/dir2/file1.txt
+touch q4/dir1/dir2/file2.md
+
+# Create files in base directory
+touch q4/file.md
+touch q4/file.sh
+touch q4/file.yml
+
+echo "File structure created under q4/"
+```
+
+### How to use:
+1. Save this as `create_structure.sh`.
+2. Run it:
+   ```bash
+   chmod +x create_structure.sh
+   ./create_structure.sh
+   ```
+3. Use `tree q4` to verify the structure.
+
+Let me know if you also need the next part that **counts files by extension**, as mentioned at the bottom.
+
+Based on the requirement in your image, here's the shell script that:
+
+1. Takes a directory as input (e.g. `q4`)
+2. Checks if `file.sh` is executable (and makes it executable if not)
+3. Counts files by their extension type
+
+```bash
+#!/bin/bash
+
+dir=$1
+
+if [ ! -d "$dir" ]; then
+  echo "Directory '$dir' not found"
+  exit 1
+fi
+
+sh_file="$dir/file.sh"
+if [ ! -f "$sh_file" ] || [ ! -x "$sh_file" ]; then
+  echo "File '$sh_file' is not executable or found"
+  if [ -f "$sh_file" ]; then
+    chmod +x "$sh_file"
+    echo "File '$sh_file' has been made executable"
+  fi
+fi
+
+# Declare an associative array for extension count
+declare -A ext_count
+
+# Find all files, loop and count by extension
+while IFS= read -r -d '' file; do
+  ext="${file##*.}"
+  if [[ "$file" == "$ext" ]]; then
+    continue  # No extension
+  fi
+  ((ext_count[$ext]++))
+done < <(find "$dir" -type f -print0)
+
+# Print counts
+for ext in "${!ext_count[@]}"; do
+  echo "$ext: ${ext_count[$ext]}"
+done
+```
+
+### How to use:
+1. Save it as `check_files.sh`
+2. Make it executable:
+   ```bash
+   chmod +x check_files.sh
+   ```
+3. Run it:
+   ```bash
+   ./check_files.sh q4
+   ```
+
+Let me know if you want it to also count directories or filter specific extensions.
+
+Thanks for the image. Based on the requirement for `deploy_nginx.sh`, here’s a full shell script that:
+
+1. Checks if Nginx is installed.
+2. Installs it if it’s not.
+3. Creates a custom HTML page with your name.
+4. Copies it to the Nginx HTML directory.
+5. Restarts the Nginx service.
+
+---
+
+### `deploy_nginx.sh`
+
+```bash
+#!/bin/bash
+
+# Your name (for the HTML content)
+name="Kulashekar Alwar N"
+
+# Check if nginx is installed
+if ! command -v nginx >/dev/null 2>&1; then
+    echo "Nginx is not installed. Installing..."
+    sudo apt update
+    sudo apt install -y nginx
+else
+    echo "Nginx is already installed."
+fi
+
+# Create custom HTML page
+html_file="index.html"
+echo "<!DOCTYPE html>
+<html>
+<head><title>Welcome</title></head>
+<body><h1>$name</h1></body>
+</html>" > "$html_file"
+
+# Move the HTML file to nginx default location
+sudo cp "$html_file" /var/www/html/index.html
+
+# Restart nginx to apply changes
+sudo systemctl restart nginx
+
+# Notify
+echo "Custom webpage deployed. Open http://localhost in your browser to view it."
+```
+
+---
+
+### How to Run:
+
+1. Save it:
+   ```bash
+   nano deploy_nginx.sh
+   ```
+2. Paste the code and save.
+3. Make it executable:
+   ```bash
+   chmod +x deploy_nginx.sh
+   ```
+4. Run it:
+   ```bash
+   ./deploy_nginx.sh
+   ```
+
+Let me know if you want the script to include checks for CentOS/RHEL-based systems too (with `yum` or `dnf`).
+
+Thanks for the second part. Based on the image, here’s the shell script named **`text_processing.sh`** that performs the following on `data.txt`:
+
+- Reads entries in `name,age,designation` format.
+- Counts people in each designation.
+- Lists all names.
+- Replaces `"Manager"` with `"Team Lead"` in the file.
+
+---
+
+### `text_processing.sh`
+
+```bash
+#!/bin/bash
+
+file="data.txt"
+
+# Check if the file exists
+if [ ! -f "$file" ]; then
+    echo "File $file not found!"
+    exit 1
+fi
+
+echo "1. Total number of people in each designation:"
+cut -d ',' -f3 "$file" | sort | uniq -c
+
+echo ""
+echo "2. List of all names:"
+cut -d ',' -f1 "$file"
+
+echo ""
+echo "3. Replacing 'Manager' with 'Team Lead'..."
+sed -i 's/Manager/Team Lead/g' "$file"
+echo "Updated file content:"
+cat "$file"
+```
+
+---
+
+### Sample `data.txt`
+
+```
+John,25,Developer
+Jane,30,Designer
+Mike,35,Manager
+```
+
+---
+
+### To Run:
+
+1. Save the script:
+   ```bash
+   nano text_processing.sh
+   ```
+2. Make it executable:
+   ```bash
+   chmod +x text_processing.sh
+   ```
+3. Run it:
+   ```bash
+   ./text_processing.sh
+   ```
+
+Let me know if you want the `backup.sh` script as well from the bottom of the image.
+
+
+Here's a complete shell script named `backup.sh` based on your requirement:
+
+---
+
+### `backup.sh`
+
+```bash
+#!/bin/bash
+
+# Set directories
+SOURCE_DIR="directory1"
+BACKUP_DIR="backup"
+ERROR_LOG="error.log"
+BACKUP_LOG="backup.log"
+TEXT_PROCESS_SCRIPT="./text_processing.sh"
+
+# Clear old logs
+> "$ERROR_LOG"
+> "$BACKUP_LOG"
+
+# Check if source directory exists
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: Source directory '$SOURCE_DIR' does not exist." >> "$ERROR_LOG"
+    exit 1
+fi
+
+# Check if backup directory exists, if not create it
+if [ ! -d "$BACKUP_DIR" ]; then
+    mkdir -p "$BACKUP_DIR" || {
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: Failed to create backup directory '$BACKUP_DIR'." >> "$ERROR_LOG"
+        exit 1
+    }
+fi
+
+# Copy all .txt files from nested folders in directory1 to backup folder
+find "$SOURCE_DIR" -type f -name "*.txt" | while read -r file; do
+    rel_path="${file#$SOURCE_DIR/}"  # Remove leading source path
+    target_path="$BACKUP_DIR/$rel_path"
+    target_dir=$(dirname "$target_path")
+
+    mkdir -p "$target_dir" || echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: Failed to create directory $target_dir" >> "$ERROR_LOG"
+
+    if cp "$file" "$target_path"; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Backed up - $file to $target_path" >> "$BACKUP_LOG"
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: Failed to copy $file" >> "$ERROR_LOG"
+    fi
+done
+
+# Run text_processing.sh if exists
+if [ -f "$TEXT_PROCESS_SCRIPT" ]; then
+    bash "$TEXT_PROCESS_SCRIPT"
+else
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: text_processing.sh script not found." >> "$ERROR_LOG"
+fi
+```
+
+---
+
+### Instructions to Run:
+
+1. Save it:
+   ```bash
+   nano backup.sh
+   ```
+2. Make executable:
+   ```bash
+   chmod +x backup.sh
+   ```
+3. Run:
+   ```bash
+   ./backup.sh
+   ```
+
+Let me know if you want a test directory structure and sample data to test this script.
+
+
+Here’s a PowerShell script that does exactly what you asked for:
+
+---
+
+### `backup.ps1`
+
+```powershell
+# Define source and backup directories
+$sourceDir = "C:\Users\user1\source"
+$backupDir = "C:\Users\user1\backup"
+$logFile = "C:\Users\user1\backup.log"
+
+# Create backup directory if it doesn't exist
+if (-not (Test-Path $backupDir)) {
+    New-Item -ItemType Directory -Path $backupDir | Out-Null
+}
+
+# Clear old log file or create new one
+New-Item -ItemType File -Path $logFile -Force | Out-Null
+
+# Get all files from the source directory (recursively if needed)
+Get-ChildItem -Path $sourceDir -File -Recurse | ForEach-Object {
+    $sourceFile = $_.FullName
+    $targetFile = Join-Path $backupDir $_.Name
+
+    try {
+        Copy-Item -Path $sourceFile -Destination $targetFile -Force
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        "$timestamp - Copied file: $($_.Name) to $targetFile" | Out-File -FilePath $logFile -Append
+    }
+    catch {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        "$timestamp - ERROR copying $($_.Name): $_" | Out-File -FilePath $logFile -Append
+    }
+}
+```
+
+---
+
+### How to Use:
+
+1. Save this script as `backup.ps1`.
+2. Modify the paths (`$sourceDir` and `$backupDir`) as per your system.
+3. Run it in PowerShell (as Administrator if needed):
+   ```powershell
+   .\backup.ps1
+   ```
+
+Want me to add recursive folder structure preservation too (like maintaining subfolders in backup)?
