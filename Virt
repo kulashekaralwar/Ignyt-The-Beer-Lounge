@@ -1,0 +1,75 @@
+Thanks for sharing the image. Here's a clear breakdown of **QUESTION 1: Simulating Storage Virtualization with Loop Devices on WSL**, along with a simplified guide to help you execute it in WSL:
+
+---
+
+### **Objective**  
+Learn storage virtualization using loopback devices to simulate virtual disks in a **WSL (Windows Subsystem for Linux)** environment.
+
+---
+
+### **Task**  
+Simulate a storage virtualization setup using **Logical Volume Manager (LVM)** with loopback files acting as virtual disks.
+
+---
+
+### **Instructions (Steps with Sample Commands)**
+
+1. **Create two empty `.img` files of 50MB**:
+   ```bash
+   dd if=/dev/zero of=disk1.img bs=1M count=50
+   dd if=/dev/zero of=disk2.img bs=1M count=50
+   ```
+
+2. **Associate the files with loop devices**:
+   ```bash
+   losetup -fP disk1.img
+   losetup -fP disk2.img
+   ```
+
+3. **Verify the loop devices**:
+   ```bash
+   losetup -a
+   ```
+
+4. **Initialize the loop devices as physical volumes**:
+   ```bash
+   sudo pvcreate /dev/loopX /dev/loopY   # Replace X and Y with actual loop numbers
+   ```
+
+5. **Create a volume group**:
+   ```bash
+   sudo vgcreate myvg /dev/loopX /dev/loopY
+   ```
+
+6. **Create a 50MB logical volume**:
+   ```bash
+   sudo lvcreate -L 50M -n mylv myvg
+   ```
+
+7. **Format the logical volume with ext4**:
+   ```bash
+   sudo mkfs.ext4 /dev/myvg/mylv
+   ```
+
+8. **Create a mount directory**:
+   ```bash
+   mkdir ~/mymount
+   ```
+
+9. **Mount the logical volume**:
+   ```bash
+   sudo mount /dev/myvg/mylv ~/mymount
+   ```
+
+10. **Create a file, write data, unmount, and remount elsewhere**:
+   ```bash
+   echo "Hello from LVM!" > ~/mymount/hello.txt
+   sudo umount ~/mymount
+   sudo mkdir /tmp/mymount
+   sudo mount /dev/myvg/mylv /tmp/mymount
+   cat /tmp/mymount/hello.txt
+   ```
+
+---
+
+Let me know if you'd like a script version of this or help with running it on WSL!
