@@ -103,3 +103,85 @@ locust -f locustfile.py
 ---
 
 Want a script or CloudFormation template to set this up faster? Or want to simulate traffic instead of just CPU load?
+Ah, I see what's happening — looks like you're on an older or stripped-down version of **Amazon Linux**, possibly **Amazon Linux 1**, where `amazon-linux-extras` isn’t available.
+
+Let me help you sort that out step by step.
+
+---
+
+### 🔍 The Problem
+
+You're running:
+
+```bash
+yum amazon-linux-extras install epel -y
+```
+
+But getting:
+
+```bash
+No such command: amazon-linux-extras.
+```
+
+That's because `amazon-linux-extras` is only available in **Amazon Linux 2** (and Amazon Linux 2023 uses `dnf`).
+
+---
+
+## ✅ Fix: Installing EPEL on Amazon Linux 1
+
+If you're on **Amazon Linux 1**, here's how to install EPEL manually:
+
+```bash
+sudo yum install -y epel-release
+```
+
+If that doesn't work, use:
+
+```bash
+sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+```
+
+Or for a slightly newer version:
+
+```bash
+sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+```
+
+Then enable and use it:
+
+```bash
+sudo yum repolist
+sudo yum install stress -y
+```
+
+---
+
+## ✅ Fix: If You're on Amazon Linux 2
+
+If you're actually on **Amazon Linux 2** and `amazon-linux-extras` is *missing*, you can manually install it:
+
+```bash
+sudo yum install -y amazon-linux-extras
+```
+
+Then:
+
+```bash
+sudo amazon-linux-extras enable epel
+sudo yum clean metadata
+sudo yum install epel-release
+```
+
+---
+
+### 🧠 Quick Tip: Check your OS version
+
+```bash
+cat /etc/os-release
+```
+
+That'll tell you if you're on Amazon Linux 1, 2, or 2023.
+
+---
+
+Let me know what OS version it shows — I can tailor the exact command for you.
