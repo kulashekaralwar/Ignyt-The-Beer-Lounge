@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+
+  frontend:
+    image: ryder07/agents:frontend
+    container_name: nextjs-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  bankend:
+    image: ryder07/agents:backend
+    container_name: bankend
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    environment:
+      - DB_NAME=mockdb
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - MISTRAL_API_KEY=9Semysh2CFaDgGu4w8DwgtA8jTNjPIL4
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  agents3:
+    image: ryder07/agents:agents3
+    container_name: agents3
+    environment:
+      - DB_NAME=mockdb
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - MISTRAL_API_KEY=9Semysh2CFaDgGu4w8DwgtA8jTNjPIL4
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    ports:
+      - "9006:8000"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    
+  postgres:
+    image: ryder07/agents:postgres
+    container_name: postgres
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - PGDATA=postgres
+      - DB_NAME=mockdb
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
